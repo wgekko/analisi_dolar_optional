@@ -35,7 +35,7 @@ def set_background(png_file):
     ''' % bin_str
     st.markdown(page_bg_img, unsafe_allow_html=True)
 
-set_background("images/fondodos.jpg")
+set_background("images/fondo_muro.jpg")
 
 st.sidebar.image("images/grafico4.gif", caption="Walter Gomez Financial Consultant")
 
@@ -8093,7 +8093,32 @@ tickers = [
   "GL30D": 38.56,
   "GL30C": 40
  }
+ ,
+ {
+  "FECHA": "05/12/2023",
+  "PESO": 381,
+  "BLUE": 910,
+  "AL30": 33515,
+  "AL30D": 35.40,
+  "AL30C": 35.70,
+  "GL30": 36949,
+  "GL30D": 39.53,
+  "GL30C": 41.85
+ }
+ ,
+ {
+  "FECHA": "06/12/2023",
+  "PESO": 381.31,
+  "BLUE": 955,
+  "AL30": 34999,
+  "AL30D": 37.00,
+  "AL30C": 37.00,
+  "GL30": 37852,
+  "GL30D": 40.40,
+  "GL30C": 42.40
+ }
 ]
+
 
 
 dato = pd.DataFrame(tickers)
@@ -8115,7 +8140,7 @@ option = st.radio("Seleccione una opción : ", (list_option), horizontal=True )
 st.subheader(f"Probabilidad de rendimientos diarios de : {option} ")
 st.write("---")
 # Calcula las variaciones diarias
-if option == 'Dólar Blue':
+if option == 'Dólar Blue':    
     df1['Daily_Return_blue'] = dato['BLUE'].pct_change() * 100
     # Etiqueta las observaciones como 'Up' si la tasa de cambio subió y 'Down' si bajó
     df1['Direction_blue'] = df1['Daily_Return_blue'].apply(lambda x: 1 if x > 0 else 0)
@@ -8125,7 +8150,7 @@ if option == 'Dólar Blue':
 
     # División de datos en entrenamiento y prueba
     X_train, X_test, y_train, y_test = train_test_split(df1[['Daily_Return_blue']], df1['Direction_blue'], test_size=0.2, random_state=42)
-
+   
     # Entrenamiento del modelo de Gradient Boosting
     model = GradientBoostingClassifier()
     model.fit(X_train, y_train)
@@ -8136,7 +8161,7 @@ if option == 'Dólar Blue':
     # Calcula la probabilidad de subida o bajada en el conjunto de prueba
     prob_up = round(sum(predictions) / len(predictions),2)
     prob_down = 1 - prob_up
-
+    
     # Muestra la probabilidad
     st.subheader(f'Probabilidad de suba de {option}: {prob_up:.2%}')
     st.subheader(f'Probabilidad de baja de {option}: {prob_down:.2%}')
@@ -8145,25 +8170,25 @@ if option == 'Dólar Blue':
     fig = px.histogram(df1, x='Daily_Return_blue', nbins=50, color='Direction_blue',
                         labels={'Daily_Return_blue': 'Rendimiento Diario (%)'},
                         text_auto = True,
-                        title=f'Distribución de Rendimientos Diarios del {option}'
-                    )
-    # Muestra la gráfica histograma de rendimimentos por fecha
-    st.plotly_chart(fig, use_container_width=True)
+                        title=f'Distribución de Rendimientos Diarios del {option}'                    
+                    )       
+    # Muestra la gráfica histograma de rendimimentos por fecha 
+    st.plotly_chart(fig, use_container_width=True)    
     fig1 = px.histogram(df1, x='Daily_Return_blue', nbins=50,
                         histnorm = 'probability density',
                         text_auto = True,
                         labels={'Daily_Return_blue': 'Rendimiento Diario (%)'},
-                        title=f'Densidad de Probabilidad Rendimientos Diarios del {option}'
+                        title=f'Densidad de Probabilidad Rendimientos Diarios del {option}' 
                     )
-
+                    
     tab1, tab2 = st.tabs(["fondo transparente", "fondo color intenso"])
     with tab1:
                 #st.write('se grafica el log a la regresion')
                 st.plotly_chart(fig1, theme="streamlit", use_container_width=True)
     with tab2:
                 st.plotly_chart(fig1, theme=None, use_container_width=True)
-
-
+    
+    
 elif option == 'Dólar CCL':
     df1['Daily_Return_ccl'] = dato['CCL'].pct_change() * 100
 
@@ -8195,17 +8220,17 @@ elif option == 'Dólar CCL':
     fig = px.histogram(df1, x='Daily_Return_ccl', nbins=50, color='Direction_ccl',
                         labels={'Daily_Return_ccl': 'Rendimiento Diario (%)'},
                         text_auto = True,
-                        title=f'Distribución de Rendimientos Diarios del {option}'
-                    )
+                        title=f'Distribución de Rendimientos Diarios del {option}'                    
+                    )       
     # Muestra la gráfica
     st.plotly_chart(fig, theme='streamlit', use_container_width=True)
     fig1 = px.histogram(df1, x='Daily_Return_ccl', nbins=50,
                         histnorm = 'probability density',
                         text_auto = True,
                         labels={'Daily_Return_ccl': 'Rendimiento Diario (%)'},
-                        title=f'Densidad de Probabilidad Rendimientos Diarios del {option}'
+                        title=f'Densidad de Probabilidad Rendimientos Diarios del {option}' 
                     )
-
+                    
     tab1, tab2 = st.tabs(["fondo transparente", "fondo color intenso"])
     with tab1:
                 #st.write('se grafica el log a la regresion')
@@ -8244,17 +8269,17 @@ elif option == 'Dólar MEP':
                         labels={'Daily_Return_mep': 'Rendimiento Diario (%)'},
                         text_auto = True,
                         title=f'Distribución de Rendimientos Diarios del {option}'
-
-                    )
+                                            
+                    )       
     # Muestra la gráfica
     st.plotly_chart(fig, theme='streamlit', use_container_width=True)
     fig1 = px.histogram(df1, x='Daily_Return_mep', nbins=50,
                         histnorm = 'probability density',
                         text_auto = True,
                         labels={'Daily_Return_mep': 'Rendimiento Diario (%)'},
-                        title=f'Densidad de Probabilidad Rendimientos Diarios del {option}'
+                        title=f'Densidad de Probabilidad Rendimientos Diarios del {option}' 
                     )
-
+                    
     tab1, tab2 = st.tabs(["fondo transparente", "fondo color intenso"])
     with tab1:
                 #st.write('se grafica el log a la regresion')
@@ -8263,24 +8288,24 @@ elif option == 'Dólar MEP':
                 st.plotly_chart(fig1, theme=None, use_container_width=True)
 else:
     st.write('ERROR, verificar la opción seleccionada...')
-
-# ----------------- calculo de correlacion -------------------
+ 
+# ----------------- calculo de correlacion ------------------- 
 x = pd.Series(dato['BLUE'])
-y = pd.Series(dato['CCL'])
-z = pd.Series(dato['MEP'])
+y = pd.Series(dato['CCL'])   
+z = pd.Series(dato['MEP'])   
 color ='orange'
 xyz= pd.DataFrame({'Blue': x, 'CCL': y, 'MEP': z })
 matrix_corr_per = xyz.corr(method="pearson")
 matrix_corr_spear = xyz.corr(method="spearman")
 matrix_corr_ken = xyz.corr(method="kendall")
 st.markdown('Correlación modelo Pearson')
-st.table( matrix_corr_per)
-st.markdown('Correlación modelo Spearman')
-st.table(matrix_corr_spear)
+st.table( matrix_corr_per) 
+st.markdown('Correlación modelo Spearman') 
+st.table(matrix_corr_spear)  
 st.markdown('Correlación modelo Kendall')
 st.table(matrix_corr_ken)
-
-
+    
+ 
 # ---- CONTACT ----
 with st.container():
     st.write("---")

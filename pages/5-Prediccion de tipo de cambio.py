@@ -1,17 +1,18 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
+from sklearn.ensemble import RandomForestRegressor
 import base64
 from sklearn.model_selection import train_test_split
-from sklearn import linear_model, tree, neighbors
+from sklearn.metrics import mean_squared_error
+import matplotlib.pyplot as plt
+
 import warnings
 warnings.simplefilter("ignore", category=FutureWarning)
+
 #-------------- logo de la pagina -----------------
 #Find more emojis here: https://www.webfx.com/tools/emoji-cheat-sheet/
-st.set_page_config(page_title="Analisis Brecha Dólar", page_icon=":📊:", layout="wide")
-
+st.set_page_config(page_title="Prediccion tipo de Cambio", page_icon=":📊:", layout="wide")
 
 # Use local CSS
 def local_css(file_name):
@@ -38,8 +39,10 @@ def set_background(png_file):
 
 set_background("images/fondo_muro.jpg")
 
-st.sidebar.image("images/grafico2.gif", caption="Walter Gomez Financial Consultant")
 
+st.sidebar.image("images/grafico7.gif", caption="Walter Gomez Financial Consultant")
+
+# Datos de ejemplo
 tickers = [
  {
   "FECHA": "01/12/2020",
@@ -8121,228 +8124,167 @@ tickers = [
 ]
 
 
-data=pd.DataFrame(tickers)
+# Crear un DataFrame
+dato = pd.DataFrame(tickers)
 
-#Primero defino tablas a llenar, una para los tipos de dolar y otra para las brechas
-dolares=pd.DataFrame()
-brechas=pd.DataFrame()
-# asigno la fecha 
-dolares['FECHA'] = data['FECHA']
-#Voy armando la tabla con los ditintos dolares
-dolares['Oficial'] = data['PESO']
-dolares['BLUE'] = data['BLUE']
-#Calculo del dolar CCL como el promedio del CCL de GGAL, PAM e YPF
-dolares['CCL'] = round(data['AL30'] /data['AL30C'],2)
-dolares['CCL'] += round(data['GL30'] /data['GL30C'],2)
-dolares['CCL'] /= 2
+#Calculo del dolar CCL como el promedio del CCL de del AL30C y el GD30C
+dato['CCL'] = round(dato['AL30'] /dato['AL30C'],2)
+dato['CCL'] += round(dato['GL30'] /dato['GL30C'],2)
+dato['CCL'] /= 2
 
-#Calculo del dolar MEP como el promedio entre el MEP del AY24 y el AO20
-dolares['MEP'] = round(data['GL30']  /data['GL30D'],2)
-dolares['MEP'] += round(data['AL30'] /data['AL30D'],2)
-dolares['MEP'] /= 2
-# asigno las fechas a la tabla brechas
-brechas['FECHA'] = data['FECHA']
+#Calculo del dolar MEP como el promedio entre el MEP del AL30D y el GD30D
+dato['MEP'] = round(dato['GL30']  /dato['GL30D'],2)
+dato['MEP'] += round(dato['AL30'] /dato['AL30D'],2)
+dato['MEP'] /= 2
 
-#Calculo de brechas oficial vs MEP y CCL
-brechas['Brecha Blue %']= round((dolares['BLUE'] / dolares['Oficial'] - 1)*100,2)
-brechas['Brecha MEP %'] = round((dolares['MEP'] / dolares['Oficial'] - 1)*100,2)
-brechas['Brecha CCL %'] = round((dolares['CCL'] / dolares['Oficial'] - 1)*100,2)
+count=0
+# --------------- Separar datos de entrada y salida para el Blue ---------------- 
+X = dato[["CCL","MEP"]].values  # Entradas
+y = dato["BLUE"].values  # Salida que deseas predecir
 
-#Diferencia entre brecha CCL, brecha MEP, BLUE 
-brechas['CCL-MEP'] = brechas['Brecha CCL %'] - brechas['Brecha MEP %']
-brechas['CCL-BLUE'] = brechas['Brecha CCL %'] - brechas['Brecha Blue %']
-brechas['MEP-BLUE'] = brechas['Brecha MEP %'] - brechas['Brecha Blue %']
-# ----- valor media y moda del blue ----------- 
-brechas['Media Blue'] = brechas["Brecha Blue %"].mean()
-media = pd.Series(brechas["Brecha Blue %"])
-brechas["Media Movil Blue"] = media.rolling(22).mean()
-# ----- valor media y moda del CCL ----------- 
-brechas['Media CCL'] = brechas["Brecha CCL %"].mean()
-media = pd.Series(brechas["Brecha CCL %"])
-brechas["Media Movil CCL"] = media.rolling(22).mean()
-# ----- valor media y moda del blue ----------- 
-brechas['Media MEP'] = brechas["Brecha MEP %"].mean()
-media = pd.Series(brechas["Brecha MEP %"])
-brechas["Media Movil MEP"] = media.rolling(22).mean()
+# Dividir datos en conjunto de entrenamiento y prueba
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
+# Crear el modelo
+modeloblue = RandomForestRegressor(n_estimators=100, random_state=42)
 
-st.subheader("grafico de la evolución en pesos de dolar BLUE, CCL, MEP")
-fig = px.line(
-    dolares,
-    x= 'FECHA',
-    y= ['BLUE', 'CCL', 'MEP'],
-    color_discrete_map={"BLUE": "white", "CCL": "yellow", "MEP":"green"}    
-) 
-st.plotly_chart(fig, use_container_width=True)
-st.write("---")
-# ----------- despliegue de la barra de opciones --------------
-list_option = ['Dólar Blue', 'Dólar CCL', 'Dólar MEP']
-option = st.radio("Seleccione una opción : ", (list_option), horizontal=True )
+# Entrenar el modelo
+modeloblue.fit(X_train, y_train)
 
-st.subheader(f"Evolución brecha diaria de :  {option} / Oficial ")
+# Predicciones en el conjunto de prueba
+y_pred = modeloblue.predict(X_test)
 
-st.write("---")
-# ---- DOLAR BLUE ----
-if option =='Dólar Blue':
-    grafico = px.line(
-        brechas,
-        x='FECHA',
-        y= ["Brecha Blue %", 'Media Blue', 'Media Movil Blue'],
-        color_discrete_map={"Brecha Blue %": "white", "Media Blue": "yellow", "Media Movil Blue":"magenta"},   
-    )  
-    grafico.update_xaxes(
-        rangeslider_visible=True,       
-    )
-    st.plotly_chart(grafico, use_container_width=True)
-    # ---- DOLAR MEP ----
-elif option == 'Dólar MEP':
-    grafico = px.line(
-        brechas,
-        x='FECHA',
-        y= ["Brecha MEP %", 'Media MEP', 'Media Movil MEP'],
-        color_discrete_map={"Brecha MEP %": "white", "Media MEP": "yellow", "Media Movil MEP":"magenta"},    
-    )
-    grafico.update_xaxes(
-        rangeslider_visible=True,       
-    )
-    st.plotly_chart(grafico, use_container_width=True)
-    # ---- DOLAR CCL ----
-elif option == 'Dólar CCL':
-    grafico = px.line(
-        brechas,
-        x='FECHA',
-         y= ["Brecha CCL %", 'Media CCL', 'Media Movil CCL'],
-        color_discrete_map={"Brecha CCL %": "white", "Media CCL": "yellow", "Media Movil CCL":"magenta"},         
-    )      
-    grafico.update_xaxes(
-        rangeslider_visible=True,       
-    ) 
-    st.plotly_chart(grafico, use_container_width=True)
-else: 
-    st.write('opción no valida, verificar ')
+# Calcular error
+error = mean_squared_error(y_test, y_pred)
 
-st.subheader("grafico de la evolución diferencial de brechas entre BLUE, CCL, MEP")
-fig1 = px.line(
-    brechas,
-    x= 'FECHA',
-    y= ['CCL-MEP', 'CCL-BLUE', 'MEP-BLUE'],
-    color_discrete_map={"CCL-MEP": "white", "CCL-BLUE": "goldenrod", "MEP-BLUE":"magenta"}    
-) 
-fig1.update_xaxes(
-        rangeslider_visible=True,       
-)
-st.plotly_chart(fig1, use_container_width=True)
-st.write("---")
+# Visualizar las predicciones vs. valores reales
+fig, ax = plt.subplots()
+ax.scatter(X_test[:, 0], y_test, color='red', label='Valor real')
+ax.scatter(X_test[:, 0], y_pred, color='blue', label='Predicción')
+ax.set_xlabel(['CCL','MEP'])
+ax.set_ylabel('BLUE')
+ax.legend()
+# Mostrar la figura en Streamlit
+st.pyplot(fig)
 
-list_opt1= ['Dólar Blue/CCL', 'Dólar Blue/MEP', 'Dólar CCL/MEP']
-opt1 = st.radio("Seleccione opción : ", (list_opt1), horizontal=True )
+# Aplicación Streamlit
+st.subheader('Predicción para tipo de  cambio BLUE')
+#blue = st.slider('Blue', float(dato['BLUE'].min()), float(dato['BLUE'].max()))  # =1Slider para ingresar el valor de BLUE
+ccl = st.slider('CCL', int(dato['CCL'].min()), int(dato['CCL'].max()), key = count)  # Slider para ingresar el valor de CCL
+count +=1
+mep = st.slider('MEP', float(dato['MEP'].min()), float(dato['MEP'].max()), key = count)  # Slider para ingresar el valor de MEP
+count +=1
+# Realizar la predicción
+entrada_blue = np.array([[ccl, mep]])
+prediccion_blue = modeloblue.predict(entrada_blue)
 
+# Mostrar la predicción
+st.subheader(f'Predicción BLUE : {round(prediccion_blue[0],2)}')
 
-models = {'Regresión': linear_model.LinearRegression,
-          'Arbol de Decisión': tree.DecisionTreeRegressor,
-          'K-NN': neighbors.KNeighborsRegressor}
+# Mostrar el error
+st.write(f'Error cuadrático medio en el conjunto de prueba: {round(error,6)}')
+st.write('')
+st.write('---')
 
-st.subheader(f"Gráficos de Predicción de Brechas de : {opt1} ")
-option_list = ['Arbol de Decisión', 'Regresión', 'K-NN']
-options = st.radio("Seleccione opción : ", (option_list), horizontal=True )
-st.subheader(f"Modelo desplegado de regresión  : {options} ")
-#st.write(f'brechas x/y = {opt1}, linea = predicción  ')
-with st.container():
-    
-    # ----Dólar Blue/CCL----
-    if opt1 == 'Dólar Blue/CCL':
-        X = brechas['Brecha CCL %'].values[:, None]
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, brechas['Brecha Blue %'], random_state=42)
+#------------------ Separar datos de entrada y salida para el CCL------------------ 
+X1 = dato[["BLUE","MEP"]].values  # Entradas
+y1 = dato["CCL"].values  # Salida que deseas predecir
 
-        model = models[options]()
-        model.fit(X_train, y_train)
+# Dividir datos en conjunto de entrenamiento y prueba
+X1_train, X1_test, y1_train, y1_test = train_test_split(X1, y1, test_size=0.2, random_state=42)
 
-        x_range = np.linspace(X.min(), X.max(), 800)
-        y_range = model.predict(x_range.reshape(-1, 1))
+# Crear el modelo
+modeloccl = RandomForestRegressor(n_estimators=100, random_state=42)
 
-        grafico1 = go.Figure([            
-            go.Scatter(x=X_train.squeeze(),
-                       y=y_train,
-                       name='train',
-                       mode='markers'),
-            go.Scatter(x=X_test.squeeze(),
-                       y=y_test,
-                       name='test',
-                       mode='markers'),
-            go.Scatter(x=x_range,
-                       y=y_range,
-                       name='prediction'),
+# Entrenar el modelo
+modeloccl.fit(X1_train, y1_train)
 
-        ])
-        st.write('eje x = brecha CCL / eje y = brecha Blue')
-        st.plotly_chart(grafico1,use_container_width=True)
-    # ---- Dólar Blue/MEP ----
-    elif opt1 == 'Dólar Blue/MEP':
-        X = brechas['Brecha MEP %'].values[:, None]
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, brechas['Brecha Blue %'], random_state=42)
+# Predicciones en el conjunto de prueba
+y1_pred = modeloccl.predict(X1_test)
 
-        model = models[options]()
-        model.fit(X_train, y_train)
+# Calcular error
+error = mean_squared_error(y1_test, y1_pred)
 
-        x_range = np.linspace(X.min(), X.max(), 800)
-        y_range = model.predict(x_range.reshape(-1, 1))
+# Visualizar las predicciones vs. valores reales
+fig1, ax = plt.subplots()
+ax.scatter(X1_test[:, 0], y1_test, color='red', label='Valor real')
+ax.scatter(X1_test[:, 0], y1_pred, color='blue', label='Predicción')
+ax.set_xlabel(['BLUE','MEP'])
+ax.set_ylabel('CCL')
+ax.legend()
+# Mostrar la figura en Streamlit
+st.pyplot(fig1)
 
-        grafico1 = go.Figure([
-            go.Scatter(x=X_train.squeeze(),
-                       y=y_train,
-                       name='train',
-                       mode='markers'),
-            go.Scatter(x=X_test.squeeze(),
-                       y=y_test,
-                       name='test',
-                       mode='markers'),
-            go.Scatter(x=x_range,
-                       y=y_range,
-                       name='prediction'),
+# Aplicación Streamlit
+st.subheader('Predicción para tipo de  cambio CCL')
+blue = st.slider('Blue', float(dato['BLUE'].min()), float(dato['BLUE'].max()), key= count)  # Slider para ingresar el valor de BLUE
+count +=1
+#ccl = st.slider('CCL', int(dato['CCL'].min()), int(dato['CCL'].max()))  # Slider para ingresar el valor de CCL
+mep = st.slider('MEP', float(dato['MEP'].min()), float(dato['MEP'].max()), key=count)  # Slider para ingresar el valor de MEP
+count +=1
+# Realizar la predicción
+entrada_ccl = np.array([[blue, mep]])
+prediccion_ccl = modeloccl.predict(entrada_ccl)
 
-        ])
-        st.write('eje x = brecha MEP / eje y = brecha Blue')
-        st.plotly_chart(grafico1,use_container_width=True)
+# Mostrar la predicción
+st.subheader(f'Predicción CCL : {round(prediccion_ccl[0],2)}')
 
-    # ---- Dólar CCL/MEP ----
-    elif opt1 == 'Dólar CCL/MEP':
-        X = brechas['Brecha MEP %'].values[:, None]
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, brechas['Brecha CCL %'], random_state=42)
+# Mostrar el error
+st.write(f'Error cuadrático medio en el conjunto de prueba: {round(error,6)}')
+st.write('')
+st.write('---')
 
-        model = models[options]()
-        model.fit(X_train, y_train)
+#------------------ Separar datos de entrada y salida para el MEP------------------ 
+X2 = dato[["BLUE","CCL"]].values  # Entradas
+y2 = dato["MEP"].values  # Salida que deseas predecir
 
-        x_range = np.linspace(X.min(), X.max(), 800)
-        y_range = model.predict(x_range.reshape(-1, 1))
+# Dividir datos en conjunto de entrenamiento y prueba
+X2_train, X2_test, y2_train, y2_test = train_test_split(X2, y2, test_size=0.2, random_state=42)
 
-        grafico1 = go.Figure([
-            go.Scatter(x=X_train.squeeze(),
-                       y=y_train,
-                       name='train',
-                       mode='markers'),
-            go.Scatter(x=X_test.squeeze(),
-                       y=y_test,
-                       name='test',
-                       mode='markers'),
-            go.Scatter(x=x_range,
-                       y=y_range,
-                       name='prediction'),
+# Crear el modelo
+modelomep = RandomForestRegressor(n_estimators=100, random_state=42)
 
-        ])
-        st.write('eje x = brecha MEP / eje y = brecha CCL')
-        st.plotly_chart(grafico1,use_container_width=True)
+# Entrenar el modelo
+modelomep.fit(X2_train, y2_train)
 
+# Predicciones en el conjunto de prueba
+y2_pred = modelomep.predict(X2_test)
 
+# Calcular error
+error = mean_squared_error(y2_test, y2_pred)
+
+# Visualizar las predicciones vs. valores reales
+fig2, ax = plt.subplots()
+ax.scatter(X2_test[:, 0], y2_test, color='red', label='Valor real')
+ax.scatter(X2_test[:, 0], y2_pred, color='blue', label='Predicción')
+ax.set_xlabel(['BLUE','CCL'])
+ax.set_ylabel('MEP')
+ax.legend()
+# Mostrar la figura en Streamlit
+st.pyplot(fig2)
+
+# Aplicación Streamlit
+st.subheader('Predicción para tipo de  cambio MEP')
+blue = st.slider('Blue', float(dato['BLUE'].min()), float(dato['BLUE'].max()), key = count)  # Slider para ingresar el valor de PESO
+count +=1
+ccl = st.slider('CCL', int(dato['CCL'].min()), int(dato['CCL'].max()), key=count)  # Slider para ingresar el valor de BLUE
+count +=1
+#mep = st.slider('MEP', float(dato['MEP'].min()), float(dato['MEP'].max()))  # Slider para ingresar el valor de GL30D
+
+# Realizar la predicción
+entrada_mep = np.array([[blue, mep]])
+prediccion_mep = modelomep.predict(entrada_mep)
+
+# Mostrar la predicción
+st.subheader(f'Predicción MEP : {round(prediccion_mep[0]),2}')
+
+# Mostrar el error
+st.write(f'Error cuadrático medio en el conjunto de prueba: {round(error,6)}')
+st.write('')
+st.write('---')
 
 # ---- CONTACT ----
 with st.container():
     st.write("---")
     st.write("&copy; - derechos reservados -  2023 -  Walter Gómez - FullStack Developer")
     st.write("##")
-
-
-
-
