@@ -37,8 +37,24 @@ def set_background(png_file):
     ''' % bin_str
     st.markdown(page_bg_img, unsafe_allow_html=True)
 
-set_background("images/fondodos.jpg")
+set_background("images/fondo3.jpg")
 
+#""" imagen de sidebar"""
+def add_local_sidebar_image(image):
+  with open(image, "rb") as image:
+    encoded_string = base64.b64encode(image.read())
+    st.markdown(
+      f"""
+      <style>
+      .stSidebar{{
+        background-image: url(data:files/{"jpg"};base64,{encoded_string.decode()});
+      }}    
+      </style>
+      """,
+      unsafe_allow_html=True
+    )
+
+add_local_sidebar_image("images/fondo1.jpg")
 
 st.sidebar.image("images/grafico7.gif", caption="Walter Gomez Financial Consultant")
 
@@ -8370,7 +8386,7 @@ dato['MEP'] += round(dato['AL30'] /dato['AL30D'],2)
 dato['MEP'] /= 2
 
 count=0
-# --------------- Separar datos de entrada y salida para el Blue ----------------
+# --------------- Separar datos de entrada y salida para el Blue ---------------- 
 X = dato[["CCL","MEP"]].values  # Entradas
 y = dato["BLUE"].values  # Salida que deseas predecir
 
@@ -8388,9 +8404,7 @@ y_pred = modeloblue.predict(X_test)
 
 # Calcular error
 error = mean_squared_error(y_test, y_pred)
-
-st.subheader('Debe hacer en orden (Blue, CCL, MEP) las predicción para evitar errores en los calculos de los modelos')
-
+st.subheader('Debe hacer en orden (Blue, CCL, MEP) las predicción para evitar errores en los modelos')
 # Visualizar las predicciones vs. valores reales
 fig, ax = plt.subplots()
 ax.scatter(X_test[:, 0], y_test, color='red', label='Valor real')
@@ -8404,12 +8418,12 @@ st.pyplot(fig)
 # Aplicación Streamlit
 st.subheader('Predicción para tipo de  cambio BLUE')
 #blue = st.slider('Blue', float(dato['BLUE'].min()), float(dato['BLUE'].max()))  # =1Slider para ingresar el valor de BLUE
-ccl = st.slider('CCL', float(500.00), float(dato['CCL'].max()), key = count)  # Slider para ingresar el valor de CCL
+ccl = st.slider('CCL', float( 500.00), float(dato['CCL'].max()), key = count)  # Slider para ingresar el valor de CCL
 count +=1
 mep = st.slider('MEP', float(500.00), float(dato['MEP'].max()), key = count)  # Slider para ingresar el valor de MEP
 count +=1
 # Realizar la predicción
-entrada_blue = np.array([[ccl, mep]])
+entrada_blue = np.array([[ccl, mep]]) 
 prediccion_blue = modeloblue.predict(entrada_blue)
 
 # Mostrar la predicción
@@ -8420,7 +8434,7 @@ st.write(f'Error cuadrático medio en el conjunto de prueba: {round(error,6)}')
 st.write('')
 st.write('---')
 
-#------------------ Separar datos de entrada y salida para el CCL------------------
+#------------------ Separar datos de entrada y salida para el CCL------------------ 
 X1 = dato[["BLUE","MEP"]].values  # Entradas
 y1 = dato["CCL"].values  # Salida que deseas predecir
 
@@ -8451,7 +8465,7 @@ st.pyplot(fig1)
 
 # Aplicación Streamlit
 st.subheader('Predicción para tipo de  cambio CCL')
-#blue = st.slider('Blue', float(dato['BLUE'].min()), float(dato['BLUE'].max()), key= count)  # Slider para ingresar el valor de BLUE
+#blue = st.slider('Blue', float(dato['BLUE'].min()), float(dato['BLUE'].max()), key= count)  # Slider para ingresar el valor de BLUE 
 blue = st.slider('Blue', float(500.00), float(dato['BLUE'].max()), key= count)  # Slider para ingresar el valor de BLUE
 count +=1
 #ccl = st.slider('CCL', int(dato['CCL'].min()), int(dato['CCL'].max()))  # Slider para ingresar el valor de CCL
@@ -8469,7 +8483,7 @@ st.write(f'Error cuadrático medio en el conjunto de prueba: {round(error,6)}')
 st.write('')
 st.write('---')
 
-#------------------ Separar datos de entrada y salida para el MEP------------------
+#------------------ Separar datos de entrada y salida para el MEP------------------ 
 X2 = dato[["BLUE","CCL"]].values  # Entradas
 y2 = dato["MEP"].values  # Salida que deseas predecir
 
@@ -8500,9 +8514,10 @@ st.pyplot(fig2)
 
 # Aplicación Streamlit
 st.subheader('Predicción para tipo de  cambio MEP')
+#blue = st.slider('Blue', float(dato['BLUE'].min()), float(dato['BLUE'].max()), key = count)  # Slider para ingresar el valor de PESO
 blue = st.slider('Blue', float(500.00), float(dato['BLUE'].max()), key = count)  # Slider para ingresar el valor de PESO
 count +=1
-ccl = st.slider('CCL', int(500.00), int(dato['CCL'].max()), key=count)  # Slider para ingresar el valor de BLUE
+ccl = st.slider('CCL', float(500.00), float(dato['CCL'].max()), key=count)  # Slider para ingresar el valor de BLUE
 count +=1
 #mep = st.slider('MEP', float(dato['MEP'].min()), float(dato['MEP'].max()))  # Slider para ingresar el valor de GL30D
 

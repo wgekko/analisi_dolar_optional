@@ -36,7 +36,25 @@ def set_background(png_file):
     ''' % bin_str
     st.markdown(page_bg_img, unsafe_allow_html=True)
 
-set_background("images/fondodos.jpg")
+set_background("images/fondo3.jpg")
+
+#""" imagen de sidebar"""
+def add_local_sidebar_image(image):
+  with open(image, "rb") as image:
+    encoded_string = base64.b64encode(image.read())
+    st.markdown(
+      f"""
+      <style>
+      .stSidebar{{
+        background-image: url(data:files/{"jpg"};base64,{encoded_string.decode()});
+      }}    
+      </style>
+      """,
+      unsafe_allow_html=True
+    )
+
+add_local_sidebar_image("images/fondo1.jpg")
+
 
 st.sidebar.image("images/grafico2.gif", caption="Walter Gomez Financial Consultant")
 
@@ -8352,12 +8370,13 @@ tickers = [
  }     
 ]
 
+
 data=pd.DataFrame(tickers)
 
 #Primero defino tablas a llenar, una para los tipos de dolar y otra para las brechas
 dolares=pd.DataFrame()
 brechas=pd.DataFrame()
-# asigno la fecha
+# asigno la fecha 
 dolares['FECHA'] = data['FECHA']
 #Voy armando la tabla con los ditintos dolares
 dolares['Oficial'] = data['PESO']
@@ -8379,19 +8398,19 @@ brechas['Brecha Blue %']= round((dolares['BLUE'] / dolares['Oficial'] - 1)*100,2
 brechas['Brecha MEP %'] = round((dolares['MEP'] / dolares['Oficial'] - 1)*100,2)
 brechas['Brecha CCL %'] = round((dolares['CCL'] / dolares['Oficial'] - 1)*100,2)
 
-#Diferencia entre brecha CCL, brecha MEP, BLUE
+#Diferencia entre brecha CCL, brecha MEP, BLUE 
 brechas['CCL-MEP'] = brechas['Brecha CCL %'] - brechas['Brecha MEP %']
 brechas['CCL-BLUE'] = brechas['Brecha CCL %'] - brechas['Brecha Blue %']
 brechas['MEP-BLUE'] = brechas['Brecha MEP %'] - brechas['Brecha Blue %']
-# ----- valor media y moda del blue -----------
+# ----- valor media y moda del blue ----------- 
 brechas['Media Blue'] = brechas["Brecha Blue %"].mean()
 media = pd.Series(brechas["Brecha Blue %"])
 brechas["Media Movil Blue"] = media.rolling(22).mean()
-# ----- valor media y moda del CCL -----------
+# ----- valor media y moda del CCL ----------- 
 brechas['Media CCL'] = brechas["Brecha CCL %"].mean()
 media = pd.Series(brechas["Brecha CCL %"])
 brechas["Media Movil CCL"] = media.rolling(22).mean()
-# ----- valor media y moda del blue -----------
+# ----- valor media y moda del blue ----------- 
 brechas['Media MEP'] = brechas["Brecha MEP %"].mean()
 media = pd.Series(brechas["Brecha MEP %"])
 brechas["Media Movil MEP"] = media.rolling(22).mean()
@@ -8402,8 +8421,8 @@ fig = px.line(
     dolares,
     x= 'FECHA',
     y= ['BLUE', 'CCL', 'MEP'],
-    color_discrete_map={"BLUE": "white", "CCL": "yellow", "MEP":"green"}
-)
+    color_discrete_map={"BLUE": "white", "CCL": "yellow", "MEP":"green"}    
+) 
 st.plotly_chart(fig, use_container_width=True)
 st.write("---")
 # ----------- despliegue de la barra de opciones --------------
@@ -8419,10 +8438,10 @@ if option =='Dólar Blue':
         brechas,
         x='FECHA',
         y= ["Brecha Blue %", 'Media Blue', 'Media Movil Blue'],
-        color_discrete_map={"Brecha Blue %": "white", "Media Blue": "yellow", "Media Movil Blue":"magenta"},
-    )
+        color_discrete_map={"Brecha Blue %": "white", "Media Blue": "yellow", "Media Movil Blue":"magenta"},   
+    )  
     grafico.update_xaxes(
-        rangeslider_visible=True,
+        rangeslider_visible=True,       
     )
     st.plotly_chart(grafico, use_container_width=True)
     # ---- DOLAR MEP ----
@@ -8431,10 +8450,10 @@ elif option == 'Dólar MEP':
         brechas,
         x='FECHA',
         y= ["Brecha MEP %", 'Media MEP', 'Media Movil MEP'],
-        color_discrete_map={"Brecha MEP %": "white", "Media MEP": "yellow", "Media Movil MEP":"magenta"},
+        color_discrete_map={"Brecha MEP %": "white", "Media MEP": "yellow", "Media Movil MEP":"magenta"},    
     )
     grafico.update_xaxes(
-        rangeslider_visible=True,
+        rangeslider_visible=True,       
     )
     st.plotly_chart(grafico, use_container_width=True)
     # ---- DOLAR CCL ----
@@ -8443,13 +8462,13 @@ elif option == 'Dólar CCL':
         brechas,
         x='FECHA',
          y= ["Brecha CCL %", 'Media CCL', 'Media Movil CCL'],
-        color_discrete_map={"Brecha CCL %": "white", "Media CCL": "yellow", "Media Movil CCL":"magenta"},
-    )
+        color_discrete_map={"Brecha CCL %": "white", "Media CCL": "yellow", "Media Movil CCL":"magenta"},         
+    )      
     grafico.update_xaxes(
-        rangeslider_visible=True,
-    )
+        rangeslider_visible=True,       
+    ) 
     st.plotly_chart(grafico, use_container_width=True)
-else:
+else: 
     st.write('opción no valida, verificar ')
 
 st.subheader("grafico de la evolución diferencial de brechas entre BLUE, CCL, MEP")
@@ -8457,10 +8476,10 @@ fig1 = px.line(
     brechas,
     x= 'FECHA',
     y= ['CCL-MEP', 'CCL-BLUE', 'MEP-BLUE'],
-    color_discrete_map={"CCL-MEP": "white", "CCL-BLUE": "goldenrod", "MEP-BLUE":"magenta"}
-)
+    color_discrete_map={"CCL-MEP": "white", "CCL-BLUE": "goldenrod", "MEP-BLUE":"magenta"}    
+) 
 fig1.update_xaxes(
-        rangeslider_visible=True,
+        rangeslider_visible=True,       
 )
 st.plotly_chart(fig1, use_container_width=True)
 st.write("---")
@@ -8479,7 +8498,7 @@ options = st.radio("Seleccione opción : ", (option_list), horizontal=True )
 st.subheader(f"Modelo desplegado de regresión  : {options} ")
 #st.write(f'brechas x/y = {opt1}, linea = predicción  ')
 with st.container():
-
+    
     # ----Dólar Blue/CCL----
     if opt1 == 'Dólar Blue/CCL':
         X = brechas['Brecha CCL %'].values[:, None]
@@ -8492,7 +8511,7 @@ with st.container():
         x_range = np.linspace(X.min(), X.max(), 800)
         y_range = model.predict(x_range.reshape(-1, 1))
 
-        grafico1 = go.Figure([
+        grafico1 = go.Figure([            
             go.Scatter(x=X_train.squeeze(),
                        y=y_train,
                        name='train',

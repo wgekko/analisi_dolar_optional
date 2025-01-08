@@ -32,20 +32,39 @@ def set_background(png_file):
     ''' % bin_str
     st.markdown(page_bg_img, unsafe_allow_html=True)
 
-set_background("images/fondodos.jpg")
+
+set_background("images/fondo3.jpg")
+
+
+#""" imagen de sidebar"""
+def add_local_sidebar_image(image):
+  with open(image, "rb") as image:
+    encoded_string = base64.b64encode(image.read())
+    st.markdown(
+      f"""
+      <style>
+      .stSidebar{{
+        background-image: url(data:files/{"jpg"};base64,{encoded_string.decode()});
+      }}    
+      </style>
+      """,
+      unsafe_allow_html=True
+    )
+
+add_local_sidebar_image("images/fondo1.jpg")
 
 st.sidebar.image("images/grafico6.gif", caption="Walter Gomez Financial Consultant")
 
-#--------- mostramos mensaje de preparacion de datos -----------
+#--------- mostramos mensaje de preparacion de datos ----------- 
 st.write('Se está trabajando en el calculo de datos...')
-st.write('proceso se demora unos segundos... ')
-st.write('---')
-
+st.write('proceso se demora unos segundos... ')    
+st.write('---')   
+  
 
 # ---------------------- desarrollo de analisis de caida de acciones
 años = 10
 ruedas = 100  # La cantidad de ruedas para filtrar por volumen operado
-cantidadAcciones = 40 # Las acciones de mayor volumen ultimas ruedas para mostrar
+cantidadAcciones = 40 # Las acciones de mayor volumen ultimas ruedas para mostrar 
 
 ccl = pd.DataFrame()
 adr = yf.download("YPF", period= str(años)+'Y' , interval='1d')['Adj Close']
@@ -78,16 +97,16 @@ desdeMax = ((preciosHoy/preciosMax-1)*100)
 tabla = pd.concat([fechasMax,fechasMin,preciosMax,preciosHoy,desdeMax,upside], axis=1)
 tabla.columns = ['Fecha Px Max','Fecha Px Min','Px Max','Px Hoy','%DesdeMax','%HastaMax']
 tabla = tabla.sort_values('%HastaMax', ascending=False).round(2)
-# ---------------- cambio el formato de fecha a mostrar por consola
+# ---------------- cambio el formato de fecha a mostrar por consola 
 tabla['Fecha Px Max'] = pd.to_datetime(tabla['Fecha Px Max'])
 tabla['Fecha Px Max'] = tabla['Fecha Px Max'].dt.strftime("%d-%m-%Y")
 
 tabla['Fecha Px Min'] = pd.to_datetime(tabla['Fecha Px Min'])
 tabla['Fecha Px Min'] = tabla['Fecha Px Min'].dt.strftime("%d-%m-%Y")
 
-
-# -------------- se muestran los datos de las tablas-----------------:
-st.write('proceso termando....!!!')
+    
+# -------------- se muestran los datos de las tablas-----------------: 
+st.write('proceso termando....!!!')     
 
 st.write('Este modelo toma como referencia el tipo de cambio que surge de la accion YPF')
 st.write('Entre mercado local y de EEUU, para poder establecer una metrica a valuar')

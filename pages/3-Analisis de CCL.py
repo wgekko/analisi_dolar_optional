@@ -34,7 +34,26 @@ def set_background(png_file):
     ''' % bin_str
     st.markdown(page_bg_img, unsafe_allow_html=True)
 
-set_background("images/fondodos.jpg")
+set_background("images/fondo3.jpg")
+
+#""" imagen de sidebar"""
+def add_local_sidebar_image(image):
+  with open(image, "rb") as image:
+    encoded_string = base64.b64encode(image.read())
+    st.markdown(
+      f"""
+      <style>
+      .stSidebar{{
+        background-image: url(data:files/{"jpg"};base64,{encoded_string.decode()});
+      }}    
+      </style>
+      """,
+      unsafe_allow_html=True
+    )
+
+add_local_sidebar_image("images/fondo1.jpg")
+
+
 
 st.sidebar.image("images/grafico3.gif", caption="Walter Gomez Financial Consultant")
 
@@ -49,7 +68,7 @@ ccl += dato['PAMP.BA']/dato['PAM'] * 25
 ccl /= 4
 
 ruedas = 60
-subas_fw = ccl.pct_change(ruedas)*100
+subas_fw = ccl.pct_change(ruedas)*100 
 
 values = [5,10,15,20,25,30]
 targets = ((1 + np.array(values)/100)*ccl.iloc[-1]).round(2)
@@ -57,8 +76,8 @@ st.container()
 st.subheader('Análisis de Probabilidades de suba en el dólar CCL')
 st.markdown(f'Se calcula para {ruedas} ruedas bursátiles, de las acciones con cotización mercado local')
 st.markdown('CEPU, GGAL, PAMP, YPF, como referencia y con relación a sus cotizaciones en dólares en el mercado de EEUU')
-with st.container():
-    for z in range(len(values)):
+with st.container():    
+    for z in range(len(values)):    
         sup_z = len(subas_fw.loc[subas_fw > values[z] ])/len(subas_fw)
         st.markdown(f'Suba mayores a : {values[z]}% - objetivo (${targets[z]}): {round(sup_z*100,1)}%')
 
@@ -80,7 +99,7 @@ targets = ((1 + np.array(values)/100)*ccl.iloc[-1]).round(2)
 
 st.subheader('Análisis de Probabilidades de bajas en el dólar CCL')
 with st.container():
-    for z in range(len(values)):
+    for z in range(len(values)):   
         sub_z = len(ccl_dd.loc[ccl_dd < values[z] ])/len(ccl_dd)
         st.markdown(f'Baja  mayor a : {-values[z]}% -objetivo  (${targets[z]}) : {round(sub_z*100,1)} %')
 
